@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+body{
+  font-family: "Inter", sans-serif;
+  background-color: #F5F5F5;
+}  
+
+#root{
+  width: 100%;
+}
+button{
+cursor: pointer;
+}
+.sidebar-main .item.active{
+  background-color: #431f0f;
+  color:#fff
+}
+.sidebar-main li a.active svg path{
+  fill:#fff
+}
+
+@media (min-width: 1024px) {
+  .not-active .inner-dropdown a{
+    /* padding-left: 8px; */
+    padding:5px
+  }
+  .not-active .dropdown:hover .inner-dropdown{
+    opacity: 1;
+  }
+  .not-active .inner-dropdown ul{
+    border: 1px solid #efefef;
+    background: #bdb3b3;
+    padding: 7px 15px;
+  } 
+  .sidebar-main.not-active{
+    justify-content: center;
+  }
+  .sidebar-main.not-active .inner-dropdown{
+    position: absolute;
+    left: 65px;
+    top: 0;
+    left: 65px;
+    width:160px
+  }
+  .not-active .dropdown-arrow{
+    right: -20px;
+    transform: rotate(-90deg);
+  }
+  .dropdown-opened-arrow{
+    transform: rotate(180deg);
+  }
+  .sidebar-main .item:hover .svg-icon path {
+    fill: white;
+  }
+}
+
+@media (max-width: 767px) {
+  .not-active{
+    overflow: hidden;
+  }
+  svg.svg-icon {
+    width: 18px;
+  }
+}
+
+
+
+
+
+
+
+.dropdown-opened{
+  height: auto;
+  overflow: visible;
+} 
+.dropdown-hidden{
+  height: 0;
+  overflow: hidden;
+}
+
+
+
+.toggle-wrapper input{
+  display: none;
+}
+.toggle-wrapper .tgl-light + .tgl-btn{
+  background: #B4B4B4;
+  border-radius: 2em;
+  padding: 2px;
+  transition: all 0.4s ease;
+}
+.toggle-wrapper .tgl + .tgl-btn {
+  outline: 0;
+  display: block;
+    width: 45px;
+    height: 25px;
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.tgl-light + .tgl-btn:after {
+  content: "";
+  border-radius: 50%;
+  background: #fff;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  display: block;
+  transition: all 0.2s ease;
+}
+.tgl + .tgl-btn:after {
+  left: 0;
+}
+.tgl:checked + .tgl-btn:after {
+  left: 50%;
+}
+.tgl:checked + .tgl-btn{
+  background-color: #04B181;
+} 
+
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOutScale {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.modal-open {
+  animation: fadeInScale 0.3s ease-out forwards;
+}
+
+.modal-close {
+  animation: fadeOutScale 0.3s ease-in forwards;
+}
