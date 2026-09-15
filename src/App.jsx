@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/auth/Login";
+import Welcome from "./pages/auth/Welcome";
 import Dashboard from "./pages/dashboard/Dashboard";
 
 import Blogs from "./pages/blogs/Blogs";
@@ -24,6 +25,7 @@ function App() {
                 {/* LOGIN - Only accessible when NOT logged in */}
                 <Route element={<PublicRoute />}>
                     <Route path="/admin/login" element={<Login />} />
+                    <Route path="/" element={<Welcome />} />
                 </Route>
 
                 {/* ADMIN - Only accessible when logged in */}

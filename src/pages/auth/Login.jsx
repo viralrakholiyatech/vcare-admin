@@ -130,7 +130,8 @@ const Login = () => {
 
                                 </div>
 
-
+                                <p>Email  : emilys</p>
+                                <p>password  : emilyspass</p>
                                 {/* FORM */}
                                 <form onSubmit={handleSubmit(onSubmit)}>
 
