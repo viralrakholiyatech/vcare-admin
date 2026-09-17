@@ -93,7 +93,23 @@ const EditBlog = () => {
                     );
                 }
 
-                const blog = result.data || result;
+                const blogList = Array.isArray(result.data)
+                    ? result.data
+                    : result.data
+                    ? [result.data]
+                    : [];
+
+                const blog =
+                    blogList.find(
+                        (b) =>
+                            String(b.id) === String(slug) ||
+                            String(b.alias) === String(slug)
+                    ) ||
+                    (!Array.isArray(result.data) && result.data ? result.data : null);
+
+                if (!blog) {
+                    throw new Error("Blog not found");
+                }
 
                 reset({
                     title: blog.title || "",
