@@ -86,15 +86,51 @@ const AddBlog = () => {
         }
     };
 
-    
     const onSubmit = async (data) => {
         console.log("Blog Data:", data);
 
         setLoading(true);
 
         try {
-            // Dummy API
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            const token = localStorage.getItem("adminToken");
+
+            const formData = new FormData();
+            formData.append("title", data.title || "");
+            formData.append("alias", data.alias || "");
+            formData.append("date", data.date || "");
+            formData.append("blog_date", data.date || "");
+            formData.append("user", data.user || "");
+            formData.append("username", data.user || "");
+            formData.append("description", data.description || "");
+            formData.append("longDescription", data.longDescription || "");
+            formData.append("long_description", data.longDescription || "");
+            formData.append("metaTitle", data.metaTitle || "");
+            formData.append("meta_title", data.metaTitle || "");
+            formData.append("metaDescription", data.metaDescription || "");
+            formData.append("meta_description", data.metaDescription || "");
+            formData.append("status", data.status || "active");
+
+            if (data.image) {
+                formData.append("image", data.image);
+                formData.append("blog_image", data.image);
+            }
+
+            const response = await fetch("/api/addblog", {
+                method: "POST",
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+            console.log("Add Blog Response:", result);
+
+            if (!response.ok || result.error || result.status === false) {
+                throw new Error(
+                    result.messages || result.message || "Failed to add blog"
+                );
+            }
 
             setLoading(false);
 
@@ -103,7 +139,7 @@ const AddBlog = () => {
                 toast: true,
                 position: "top-end",
                 icon: "success",
-                title: "Blog added successfully",
+                title: result.messages || result.message || "Blog added successfully",
                 showConfirmButton: false,
                 timer: 2000,
                 timerProgressBar: true,
@@ -113,15 +149,17 @@ const AddBlog = () => {
             navigate("/admin/blogs");
 
         } catch (error) {
+            console.error("Add Blog Error:", error);
             setLoading(false);
 
             Swal.fire({
                 toast: true,
                 position: "top-end",
                 icon: "error",
-                title: "Something went wrong",
+                title: "Failed to add blog",
+                text: error.message || "Something went wrong. Please try again.",
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 2500,
                 timerProgressBar: true,
             });
         }
