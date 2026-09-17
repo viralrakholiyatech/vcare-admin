@@ -33,6 +33,7 @@ const Blogs = () => {
           blogList.map((item) => ({
             id: item.id,
             name: item.title,
+            date: item.blog_date || item.date || '',
             img: item.image
               ? item.image.startsWith('http')
                 ? item.image
@@ -146,19 +147,25 @@ const Blogs = () => {
       width: '120px',
     },
     {
+      name: 'Date',
+      selector: row => row.date || '—',
+      sortable: true,
+      width: '130px',
+    },
+    {
       name: 'Status',
       cell: row => (
         <button
           type="button"
           className={`px-3 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all duration-200 ${row.status === 'active'
-              ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
-              : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
+            ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
+            : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
             }`}
         >
           <span
             className={`inline-block w-2 h-2 rounded-full mr-1.5 ${row.status === 'active'
-                ? 'bg-green-600'
-                : 'bg-red-600'
+              ? 'bg-green-600'
+              : 'bg-red-600'
               }`}
           ></span>
           {row.status}
@@ -225,8 +232,8 @@ const Blogs = () => {
             data={data}
             progressPending={loading}
             pagination
-            paginationPerPage={20}
-            paginationRowsPerPageOptions={[20, 50, 100]}
+            paginationPerPage={100}
+            paginationRowsPerPageOptions={[100, 200, 500]}
             responsive
             highlightOnHover
             pointerOnHover
