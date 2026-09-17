@@ -68,9 +68,16 @@ const EditBlog = () => {
             try {
                 console.log("Loading Blog ID:", slug);
 
-                const response = await fetch(
-                    `https://jsonplaceholder.typicode.com/posts/${slug}`
-                );
+                const token = localStorage.getItem("adminToken");
+
+                const response = await fetch("/api/getblog", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({ id: slug }),
+                });
 
                 if (!response.ok) {
                     throw new Error("Failed to load blog");
@@ -80,33 +87,34 @@ const EditBlog = () => {
 
                 console.log("Blog API Response:", result);
 
-                /*
-                 * JSONPlaceholder only gives:
-                 * id, title, body, userId
-                 *
-                 * So we are mapping those values
-                 * to our blog fields for dummy testing.
-                 */
+                if (result.error || result.status === false) {
+                    throw new Error(
+                        result.messages || result.message || "Failed to load blog"
+                    );
+                }
+
+                const blog = result.data || result;
 
                 reset({
-                    title: result.title || "",
-                    alias: result.title
-                        ? result.title.toLowerCase().replace(/\s+/g, "-")
-                        : "",
-                    date: "2026-09-15",
-                    user: `User ${result.userId || 1}`,
-                    description: result.body || "",
-                    longDescription: `<p>${result.body || ""}</p>`,
-                    metaTitle: result.title || "",
-                    metaDescription: result.body || "",
-                    status: "active",
+                    title: blog.title || "",
+                    alias: blog.alias || "",
+                    date: blog.blog_date || blog.date || "",
+                    user: blog.username || blog.user || "",
+                    description: blog.description || "",
+                    longDescription: blog.long_description || blog.longDescription || "",
+                    metaTitle: blog.meta_title || blog.metaTitle || "",
+                    metaDescription: blog.meta_description || blog.metaDescription || "",
+                    status: blog.status || "active",
                     image: null,
                 });
 
-                // Dummy image
-                setImagePreview(
-                    `https://dummyimage.com/600x400/000/fff&text=Blog+${result.id}`
-                );
+                if (blog.image) {
+                    setImagePreview(
+                        blog.image.startsWith("http")
+                            ? blog.image
+                            : `https://www.vcaretechnologies.net/uploads/${blog.image}`
+                    );
+                }
 
                 setLoading(false);
             } catch (error) {

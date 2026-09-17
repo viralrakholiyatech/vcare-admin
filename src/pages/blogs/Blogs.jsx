@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -7,20 +7,49 @@ import EditIcon from '../../../public/images/edit-icon.svg';
 import DeleteIcon from '../../../public/images/delete-icon.svg';
 
 const Blogs = () => {
-  const [data, setData] = useState([
-    {
-      id: 1,
-      name: 'Trewt',
-      img: 'https://dummyimage.com/600x400/000/fff',
-      status: 'active',
-    },
-    {
-      id: 2,
-      name: 'Riya Patel',
-      img: 'https://dummyimage.com/600x400/000/fff',
-      status: 'inactive',
-    },
-  ]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load Blogs
+  const fetchBlogs = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/getblog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({}),
+      });
+
+      const result = await response.json();
+      console.log('Blogs list response:', result);
+
+      if (response.ok && !result.error && result.data) {
+        const blogList = Array.isArray(result.data) ? result.data : [result.data];
+        setData(
+          blogList.map((item) => ({
+            id: item.id,
+            name: item.title,
+            img: item.image?.startsWith('http')
+              ? item.image
+              : `https://www.vcaretechnologies.net/uploads/${item.image}`,
+            status: item.status || 'active',
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
   // Update Status
   const updateStatus = (id, newStatus) => {
@@ -34,7 +63,7 @@ const Blogs = () => {
   };
 
   // Delete Blog
-  const handleDelete = async id => {
+  const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: 'You will not be able to recover this blog!',
@@ -51,31 +80,39 @@ const Blogs = () => {
     }
 
     try {
-      // Dummy Delete API
-      const response = await fetch(
-        `https://jsonplaceholder.typicode.com/posts/${id}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const token = localStorage.getItem('adminToken');
 
-      if (response.ok) {
+      const response = await fetch('/api/deleteblog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      const resData = await response.json();
+
+      if (response.ok && !resData.error && resData.status !== false) {
         // Remove from table
-        setData(prev => prev.filter(row => row.id !== id));
+        setData((prev) => prev.filter((row) => row.id !== id));
 
         Swal.fire({
           title: 'Deleted!',
-          text: 'Blog has been deleted successfully.',
+          text: resData.messages || resData.message || 'Blog has been deleted successfully.',
           icon: 'success',
           confirmButtonColor: '#431f0f',
         });
       } else {
-        throw new Error('Delete failed');
+        throw new Error(
+          resData.messages || resData.message || 'Failed to delete blog'
+        );
       }
     } catch (error) {
+      console.error('Delete Blog Error:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Something went wrong while deleting the blog.',
+        text: error.message || 'Something went wrong while deleting the blog.',
         icon: 'error',
         confirmButtonColor: '#431f0f',
       });
@@ -186,6 +223,7 @@ const Blogs = () => {
           <DataTable
             columns={columns}
             data={data}
+            progressPending={loading}
             pagination
             paginationPerPage={5}
             paginationRowsPerPageOptions={[5, 10, 20]}
