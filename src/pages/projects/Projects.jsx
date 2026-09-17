@@ -7,6 +7,21 @@ import Layout from '../../components/Layout';
 import EditIcon from '../../../public/images/edit-icon.svg';
 import DeleteIcon from '../../../public/images/delete-icon.svg';
 
+const parseDate = (val) => {
+  if (!val) return 0;
+  if (typeof val === 'number') return val;
+  const parsed = new Date(val).getTime();
+  if (!isNaN(parsed)) return parsed;
+  const parts = String(val).split(/[-/]/);
+  if (parts.length === 3) {
+    if (parts[2].length === 4) {
+      const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+      if (!isNaN(d)) return d;
+    }
+  }
+  return 0;
+};
+
 const Projects = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,12 +52,22 @@ const Projects = () => {
 
       if (response.ok && !result.error && result.data) {
         const projectList = Array.isArray(result.data) ? result.data : [result.data];
+
+        const sortedList = [...projectList].sort((a, b) => {
+          const dateA = parseDate(a.publish_date || a.date || a.created_at || a.created_date || a.updated_at);
+          const dateB = parseDate(b.publish_date || b.date || b.created_at || b.created_date || b.updated_at);
+          if (dateB !== dateA && dateA !== 0 && dateB !== 0) {
+            return dateB - dateA;
+          }
+          return (Number(b.id) || 0) - (Number(a.id) || 0);
+        });
+
         setData(
-          projectList.map((item) => ({
+          sortedList.map((item) => ({
             id: item.id,
             name: item.title,
             alias: item.alias,
-            date: item.publish_date || item.date || '',
+            date: item.publish_date || item.date || item.created_at || '',
             img: item.image
               ? item.image.startsWith('http')
                 ? item.image
