@@ -12,10 +12,11 @@ const EditProject = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
 
-    const [thumbnailPreview, setThumbnailPreview] = useState(null);
-    const [bannerPreview, setBannerPreview] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [bgImagePreview, setBgImagePreview] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
 
-    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [fetching, setFetching] = useState(true);
 
     const {
@@ -26,22 +27,22 @@ const EditProject = () => {
         formState: { errors },
     } = useForm({
         defaultValues: {
-            projectName: "",
-            thumbnail: null,
-            category: "",
-            shortDescription: "",
-            bannerImage: null,
-            projectType: "",
-            websiteLink: "",
-            facebookLink: "",
-            instagramLink: "",
-            linkedinLink: "",
-            androidAppLink: "",
-            iosAppLink: "",
-            projectContent: "",
-            metaTitle: "",
-            metaDescription: "",
-            slug: "",
+            title: "",
+            alias: "",
+            short_title: "",
+            description: "",
+            service_text: "",
+            is_home: "0",
+            service_id: "",
+            site_url: "",
+            android_url: "",
+            ios_url: "",
+            long_description: "",
+            meta_title: "",
+            meta_description: "",
+            image: null,
+            background_image: null,
+            logo_image: null,
         },
     });
 
@@ -71,234 +72,202 @@ const EditProject = () => {
             setFetching(true);
 
             try {
-                // Dummy API
-                const response = await fetch(
-                    `https://jsonplaceholder.typicode.com/posts/${slug}`
-                );
+                console.log("Loading Project ID:", slug);
+                const token = localStorage.getItem("adminToken");
+
+                const response = await fetch("/api/getproject", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({ id: slug }),
+                });
 
                 if (!response.ok) {
                     throw new Error("Failed to fetch project");
                 }
 
                 const result = await response.json();
-
                 console.log("Project API Response:", result);
 
-                /*
-                 * JSONPlaceholder doesn't have project fields.
-                 * We are mapping the dummy response into our
-                 * project form fields.
-                 */
+                if (result.error || result.status === false) {
+                    throw new Error(result.messages || result.message || "Failed to load project");
+                }
+
+                const projectList = Array.isArray(result.data)
+                    ? result.data
+                    : result.data
+                    ? [result.data]
+                    : [];
+
+                const project =
+                    projectList.find(
+                        (p) =>
+                            String(p.id) === String(slug) ||
+                            String(p.alias) === String(slug)
+                    ) ||
+                    (!Array.isArray(result.data) && result.data ? result.data : null);
+
+                if (!project) {
+                    throw new Error("Project not found");
+                }
 
                 reset({
-                    projectName: result.title || "Demo Project",
-                    thumbnail: null,
-                    category: "Website",
-                    shortDescription:
-                        "<p>This is a demo short description for the project.</p>",
-                    bannerImage: null,
-                    projectType: "UX/UI / Website",
-                    websiteLink: "https://example.com",
-                    facebookLink: "https://facebook.com/",
-                    instagramLink: "https://instagram.com/",
-                    linkedinLink: "https://linkedin.com/",
-                    androidAppLink: "https://play.google.com/",
-                    iosAppLink: "https://apps.apple.com/",
-                    projectContent:
-                        `<p>${result.body || "This is demo project content."}</p>`,
-                    metaTitle: result.title || "Demo Project",
-                    metaDescription:
-                        "This is a demo project meta description.",
-                    slug: slug || "",
+                    title: project.title || "",
+                    alias: project.alias || "",
+                    short_title: project.short_title || "",
+                    description: project.description || "",
+                    service_text: project.service_text || "",
+                    is_home: project.is_home ? String(project.is_home) : "0",
+                    service_id: project.services_id || project.service_id || "",
+                    site_url: project.site_url || "",
+                    android_url: project.android_url || "",
+                    ios_url: project.ios_url || "",
+                    long_description: project.long_description || "",
+                    meta_title: project.meta_title || "",
+                    meta_description: project.meta_description || "",
+                    image: null,
+                    background_image: null,
+                    logo_image: null,
                 });
 
-                /*
-                 * Dummy existing images.
-                 *
-                 * Replace these URLs later with the actual
-                 * image URLs returned by your API.
-                 */
-                setThumbnailPreview(
-                    "https://picsum.photos/300/180?random=10"
-                );
+                const getFullImgUrl = (img) => {
+                    if (!img) return null;
+                    return img.startsWith("http")
+                        ? img
+                        : `https://www.vcaretechnologies.net/public/frontend/images/projects/${img}`;
+                };
 
-                setBannerPreview(
-                    "https://picsum.photos/1000/400?random=20"
-                );
+                if (project.image) {
+                    setImagePreview(getFullImgUrl(project.image));
+                }
+                if (project.background_image) {
+                    setBgImagePreview(getFullImgUrl(project.background_image));
+                }
+                if (project.logo || project.logo_image) {
+                    setLogoPreview(getFullImgUrl(project.logo || project.logo_image));
+                }
 
+                setFetching(false);
             } catch (error) {
                 console.error("Fetch Project Error:", error);
+                setFetching(false);
 
                 Swal.fire({
                     toast: true,
                     position: "top-end",
                     icon: "error",
                     title: "Failed to load project",
+                    text: error.message || "Something went wrong",
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 2500,
                     timerProgressBar: true,
                 });
 
                 navigate("/admin/projects");
-            } finally {
-                setFetching(false);
             }
         };
 
-        fetchProject();
+        if (slug) {
+            fetchProject();
+        }
     }, [slug, reset, navigate]);
 
-    // ================= RESET FORM =================
-    const handleReset = () => {
-        reset({
-            projectName: "",
-            thumbnail: null,
-            category: "",
-            shortDescription: "",
-            bannerImage: null,
-            projectType: "",
-            websiteLink: "",
-            facebookLink: "",
-            instagramLink: "",
-            linkedinLink: "",
-            androidAppLink: "",
-            iosAppLink: "",
-            projectContent: "",
-            metaTitle: "",
-            metaDescription: "",
-            slug: "",
-            status: "active",
-        });
-
-        setThumbnailPreview(null);
-        setBannerPreview(null);
-
-        const thumbnailInput =
-            document.getElementById("thumbnail-image");
-
-        const bannerInput =
-            document.getElementById("banner-image");
-
-        if (thumbnailInput) {
-            thumbnailInput.value = "";
-        }
-
-        if (bannerInput) {
-            bannerInput.value = "";
-        }
-    };
-
-    // ================= SUBMIT / UPDATE =================
+    // ================= SUBMIT =================
     const onSubmit = async (data) => {
         console.log("Updated Project Data:", data);
 
-        setLoading(true);
+        setSaving(true);
 
         try {
-            /*
-             * Dummy PUT API
-             *
-             * In real API, you will send FormData because
-             * thumbnail and bannerImage are files.
-             */
+            const token = localStorage.getItem("adminToken");
 
-            const response = await fetch(
-                `https://jsonplaceholder.typicode.com/posts/${slug}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        id: slug,
-                        title: data.projectName,
-                        body: data.projectContent,
-                        category: data.category,
-                        shortDescription: data.shortDescription,
-                        projectType: data.projectType,
-                        websiteLink: data.websiteLink,
-                        facebookLink: data.facebookLink,
-                        instagramLink: data.instagramLink,
-                        linkedinLink: data.linkedinLink,
-                        androidAppLink: data.androidAppLink,
-                        iosAppLink: data.iosAppLink,
-                        metaTitle: data.metaTitle,
-                        metaDescription: data.metaDescription,
-                        slug: data.slug,
-                        status: data.status,
+            const formData = new FormData();
+            formData.append("id", slug);
+            formData.append("title", data.title || "");
+            formData.append("alias", data.alias || "");
+            formData.append("short_title", data.short_title || "");
+            formData.append("description", data.description || "");
+            formData.append("service_text", data.service_text || "");
+            formData.append("is_home", data.is_home || "0");
+            formData.append("service_id", data.service_id || "");
+            formData.append("services_id", data.service_id || "");
+            formData.append("site_url", data.site_url || "");
+            formData.append("android_url", data.android_url || "");
+            formData.append("ios_url", data.ios_url || "");
+            formData.append("long_description", data.long_description || "");
+            formData.append("meta_title", data.meta_title || "");
+            formData.append("meta_description", data.meta_description || "");
 
-                        // Dummy image names
-                        thumbnail: data.thumbnail
-                            ? data.thumbnail.name
-                            : null,
-
-                        bannerImage: data.bannerImage
-                            ? data.bannerImage.name
-                            : null,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Failed to update project");
+            if (data.image) {
+                formData.append("image", data.image);
+            }
+            if (data.background_image) {
+                formData.append("background_image", data.background_image);
+            }
+            if (data.logo_image) {
+                formData.append("logo_image", data.logo_image);
+                formData.append("logo", data.logo_image);
             }
 
+            const response = await fetch("/api/addproject", {
+                method: "POST",
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: formData,
+            });
+
             const result = await response.json();
+            console.log("Update Project Response:", result);
 
-            console.log("Update API Response:", result);
+            if (!response.ok || result.error || result.status === false) {
+                throw new Error(
+                    result.messages || result.message || "Failed to update project"
+                );
+            }
 
-            setLoading(false);
+            setSaving(false);
 
             await Swal.fire({
                 toast: true,
                 position: "top-end",
                 icon: "success",
-                title: "Project updated successfully",
+                title: result.messages || result.message || "Project updated successfully",
                 showConfirmButton: false,
                 timer: 2000,
                 timerProgressBar: true,
             });
 
             navigate("/admin/projects");
-
         } catch (error) {
             console.error("Update Project Error:", error);
-
-            setLoading(false);
+            setSaving(false);
 
             Swal.fire({
                 toast: true,
                 position: "top-end",
                 icon: "error",
-                title: "Something went wrong",
-                text: error.message,
+                title: "Update failed",
+                text: error.message || "Something went wrong. Please try again.",
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 2500,
                 timerProgressBar: true,
             });
         }
     };
 
-    // ================= LOADING =================
     if (fetching) {
         return (
             <Layout>
-                <div className="main-page-card border border-[#E9EEF2] bg-white rounded-lg lg:p-4 p-3">
-
-                    <div className="flex items-center justify-center min-h-[400px]">
-
-                        <div className="flex flex-col items-center gap-3">
-
-                            <span className="w-8 h-8 border-4 border-[#431f0f] border-t-transparent rounded-full animate-spin"></span>
-
-                            <p className="text-[14px] text-[#808080]">
-                                Loading project...
-                            </p>
-
-                        </div>
-
+                <div className="main-page-card border border-[#E9EEF2] bg-white rounded-lg lg:p-4 p-3 min-h-[350px] flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center">
+                        <span className="w-8 h-8 border-4 border-[#431f0f] border-t-transparent rounded-full animate-spin"></span>
+                        <p className="mt-3 text-[14px] text-[#666]">
+                            Loading project...
+                        </p>
                     </div>
-
                 </div>
             </Layout>
         );
@@ -306,12 +275,10 @@ const EditProject = () => {
 
     return (
         <Layout>
-
             <div className="main-page-card border border-[#E9EEF2] bg-white rounded-lg lg:p-4 p-3">
 
                 {/* ================= HEADER ================= */}
                 <div className="flex items-center gap-3 mb-5">
-
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
@@ -323,173 +290,326 @@ const EditProject = () => {
                     <h2 className="lg:text-[24px] text-[22px] font-semibold text-[#151515]">
                         Edit Project
                     </h2>
-
                 </div>
-
 
                 {/* ================= FORM ================= */}
                 <form onSubmit={handleSubmit(onSubmit)}>
-
                     <div className="grid grid-cols-12 gap-x-4 gap-y-3">
 
-
-                        {/* ================= PROJECT NAME ================= */}
+                        {/* ================= TITLE ================= */}
                         <div className="col-span-12 lg:col-span-4">
-
                             <div className="input_box pb-3 relative">
-
                                 <p className="mb-1 text-[14px] text-[#151515]">
-                                    Project Name
-                                    <span className="text-red-500">*</span>
+                                    Title<span className="text-red-500">*</span>
                                 </p>
-
                                 <input
                                     type="text"
-                                    placeholder="Project Name"
+                                    placeholder="Project Title"
                                     className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("projectName", {
-                                        required: "Enter project name",
+                                    {...register("title", {
+                                        required: "Enter project title",
                                     })}
                                 />
-
-                                {errors.projectName && (
+                                {errors.title && (
                                     <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
-                                        {errors.projectName.message}
+                                        {errors.title.message}
                                     </p>
                                 )}
-
                             </div>
-
                         </div>
 
-
-                        {/* ================= THUMBNAIL IMAGE ================= */}
+                        {/* ================= ALIAS ================= */}
                         <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3 relative">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Alias<span className="text-red-500">*</span>
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="Project Alias"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("alias", {
+                                        required: "Enter project alias",
+                                    })}
+                                />
+                                {errors.alias && (
+                                    <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
+                                        {errors.alias.message}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
 
+                        {/* ================= SHORT TITLE ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Short Title
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="Short Title"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("short_title")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= SERVICE TEXT ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Service Text
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. UX/UI / Website"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("service_text")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= SERVICE ID ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Service ID
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="Service ID"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("service_id")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= IS HOME ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Show on Home?
+                                </p>
+                                <select
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] bg-white"
+                                    {...register("is_home")}
+                                >
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* ================= SITE URL ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Website URL (site_url)
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="https://example.com"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("site_url")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= ANDROID URL ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    Android App URL (android_url)
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="https://play.google.com/..."
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("android_url")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= IOS URL ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <div className="input_box pb-3">
+                                <p className="mb-1 text-[14px] text-[#151515]">
+                                    iOS App URL (ios_url)
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="https://apps.apple.com/..."
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
+                                    {...register("ios_url")}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ================= MAIN IMAGE ================= */}
+                        <div className="col-span-12 lg:col-span-4">
                             <Controller
-                                name="thumbnail"
+                                name="image"
                                 control={control}
-                                render={({
-                                    field: { onChange },
-                                    fieldState: { error },
-                                }) => (
+                                render={({ field: { onChange } }) => (
                                     <div className="input_box pb-3 relative">
-
                                         <p className="mb-1 text-[14px] text-[#151515]">
-                                            Thumbnail Image
+                                            Main Image (image)
                                         </p>
-
                                         <input
-                                            id="thumbnail-image"
+                                            id="project-image"
                                             type="file"
                                             accept="image/*"
                                             className="w-full py-2 px-3 text-[14px] border border-[#E6EAEF] rounded-md bg-white"
                                             onChange={(e) => {
-                                                const file =
-                                                    e.target.files[0];
-
+                                                const file = e.target.files[0];
                                                 if (file) {
                                                     onChange(file);
-
-                                                    setThumbnailPreview(
-                                                        URL.createObjectURL(
-                                                            file
-                                                        )
-                                                    );
+                                                    setImagePreview(URL.createObjectURL(file));
                                                 }
                                             }}
                                         />
-
-                                        {error && (
-                                            <p className="mt-1 text-[12px] text-[#dc3545]">
-                                                {error.message}
-                                            </p>
-                                        )}
-
-                                        {thumbnailPreview && (
+                                        {imagePreview && (
                                             <div className="mt-3 relative w-fit">
-
                                                 <img
-                                                    src={thumbnailPreview}
-                                                    alt="Thumbnail Preview"
-                                                    className="w-[150px] h-[90px] object-cover rounded-md border border-[#E6EAEF]"
+                                                    src={imagePreview}
+                                                    alt="Project Preview"
+                                                    className="w-[140px] h-[85px] object-cover rounded-md border border-[#E6EAEF]"
                                                 />
-
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        setThumbnailPreview(
-                                                            null
-                                                        );
-
+                                                        setImagePreview(null);
                                                         onChange(null);
-
-                                                        const input =
-                                                            document.getElementById(
-                                                                "thumbnail-image"
-                                                            );
-
-                                                        if (input) {
-                                                            input.value = "";
-                                                        }
+                                                        const el = document.getElementById("project-image");
+                                                        if (el) el.value = "";
                                                     }}
                                                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600"
                                                 >
                                                     ×
                                                 </button>
-
                                             </div>
                                         )}
-
+                                        <p className="text-[11px] text-[#888] mt-1">
+                                            Leave empty to keep existing image.
+                                        </p>
                                     </div>
                                 )}
                             />
-
                         </div>
 
-
-                        {/* ================= CATEGORY ================= */}
+                        {/* ================= BACKGROUND IMAGE ================= */}
                         <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3 relative">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Category
-                                    <span className="text-red-500">*</span>
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="Project Category"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("category", {
-                                        required: "Enter category",
-                                    })}
-                                />
-
-                                {errors.category && (
-                                    <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
-                                        {errors.category.message}
-                                    </p>
+                            <Controller
+                                name="background_image"
+                                control={control}
+                                render={({ field: { onChange } }) => (
+                                    <div className="input_box pb-3 relative">
+                                        <p className="mb-1 text-[14px] text-[#151515]">
+                                            Background Image
+                                        </p>
+                                        <input
+                                            id="project-bg-image"
+                                            type="file"
+                                            accept="image/*"
+                                            className="w-full py-2 px-3 text-[14px] border border-[#E6EAEF] rounded-md bg-white"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    onChange(file);
+                                                    setBgImagePreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                        {bgImagePreview && (
+                                            <div className="mt-3 relative w-fit">
+                                                <img
+                                                    src={bgImagePreview}
+                                                    alt="Background Preview"
+                                                    className="w-[140px] h-[85px] object-cover rounded-md border border-[#E6EAEF]"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setBgImagePreview(null);
+                                                        onChange(null);
+                                                        const el = document.getElementById("project-bg-image");
+                                                        if (el) el.value = "";
+                                                    }}
+                                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        )}
+                                        <p className="text-[11px] text-[#888] mt-1">
+                                            Leave empty to keep existing image.
+                                        </p>
+                                    </div>
                                 )}
-
-                            </div>
-
+                            />
                         </div>
 
+                        {/* ================= LOGO IMAGE ================= */}
+                        <div className="col-span-12 lg:col-span-4">
+                            <Controller
+                                name="logo_image"
+                                control={control}
+                                render={({ field: { onChange } }) => (
+                                    <div className="input_box pb-3 relative">
+                                        <p className="mb-1 text-[14px] text-[#151515]">
+                                            Logo Image (logo_image)
+                                        </p>
+                                        <input
+                                            id="project-logo-image"
+                                            type="file"
+                                            accept="image/*"
+                                            className="w-full py-2 px-3 text-[14px] border border-[#E6EAEF] rounded-md bg-white"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    onChange(file);
+                                                    setLogoPreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                        {logoPreview && (
+                                            <div className="mt-3 relative w-fit">
+                                                <img
+                                                    src={logoPreview}
+                                                    alt="Logo Preview"
+                                                    className="w-[140px] h-[85px] object-contain rounded-md border border-[#E6EAEF] bg-gray-50 p-1"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLogoPreview(null);
+                                                        onChange(null);
+                                                        const el = document.getElementById("project-logo-image");
+                                                        if (el) el.value = "";
+                                                    }}
+                                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        )}
+                                        <p className="text-[11px] text-[#888] mt-1">
+                                            Leave empty to keep existing image.
+                                        </p>
+                                    </div>
+                                )}
+                            />
+                        </div>
 
-                        {/* ================= SHORT DESCRIPTION ================= */}
+                        {/* ================= DESCRIPTION ================= */}
                         <div className="col-span-12">
-
                             <div className="input_box pb-4 relative">
-
                                 <p className="mb-1 text-[14px] text-[#151515]">
-                                    Short Description
-                                    <span className="text-red-500">*</span>
+                                    Short Description<span className="text-red-500">*</span>
                                 </p>
-
                                 <Controller
-                                    name="shortDescription"
+                                    name="description"
                                     control={control}
                                     rules={{
                                         validate: validateEditor,
@@ -504,272 +624,22 @@ const EditProject = () => {
                                         />
                                     )}
                                 />
-
-                                {errors.shortDescription && (
+                                {errors.description && (
                                     <p className="mt-1 text-[12px] text-[#dc3545]">
-                                        {errors.shortDescription.message}
+                                        {errors.description.message}
                                     </p>
                                 )}
-
                             </div>
-
                         </div>
 
-
-                        {/* ================= BANNER IMAGE ================= */}
-                        <div className="col-span-12 lg:col-span-7">
-
-                            <Controller
-                                name="bannerImage"
-                                control={control}
-                                render={({
-                                    field: { onChange },
-                                    fieldState: { error },
-                                }) => (
-                                    <div className="input_box pb-3 relative">
-
-                                        <p className="mb-1 text-[14px] text-[#151515]">
-                                            Banner Image
-                                        </p>
-
-                                        <input
-                                            id="banner-image"
-                                            type="file"
-                                            accept="image/*"
-                                            className="w-full py-2 px-3 text-[14px] border border-[#E6EAEF] rounded-md bg-white"
-                                            onChange={(e) => {
-                                                const file =
-                                                    e.target.files[0];
-
-                                                if (file) {
-                                                    onChange(file);
-
-                                                    setBannerPreview(
-                                                        URL.createObjectURL(
-                                                            file
-                                                        )
-                                                    );
-                                                }
-                                            }}
-                                        />
-
-                                        {error && (
-                                            <p className="mt-1 text-[12px] text-[#dc3545]">
-                                                {error.message}
-                                            </p>
-                                        )}
-
-                                        {bannerPreview && (
-                                            <div className="mt-3 relative w-fit">
-
-                                                <img
-                                                    src={bannerPreview}
-                                                    alt="Banner Preview"
-                                                    className="w-[220px] h-[100px] object-cover rounded-md border border-[#E6EAEF]"
-                                                />
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setBannerPreview(
-                                                            null
-                                                        );
-
-                                                        onChange(null);
-
-                                                        const input =
-                                                            document.getElementById(
-                                                                "banner-image"
-                                                            );
-
-                                                        if (input) {
-                                                            input.value = "";
-                                                        }
-                                                    }}
-                                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600"
-                                                >
-                                                    ×
-                                                </button>
-
-                                            </div>
-                                        )}
-
-                                    </div>
-                                )}
-                            />
-
-                        </div>
-
-
-                        {/* ================= PROJECT TYPE ================= */}
-                        <div className="col-span-12 lg:col-span-5">
-
-                            <div className="input_box pb-3 relative">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Project Type / Services
-                                    <span className="text-red-500">*</span>
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="UX/UI / Website / Mobile App"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("projectType", {
-                                        required:
-                                            "Enter project type / services",
-                                    })}
-                                />
-
-                                {errors.projectType && (
-                                    <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
-                                        {errors.projectType.message}
-                                    </p>
-                                )}
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= WEBSITE LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Website Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://example.com"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("websiteLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= FACEBOOK LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Facebook Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://facebook.com/"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("facebookLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= INSTAGRAM LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Instagram Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://instagram.com/"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("instagramLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= LINKEDIN LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    LinkedIn Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://linkedin.com/"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("linkedinLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= ANDROID APP LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Android App Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://play.google.com/"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("androidAppLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= IOS APP LINK ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    iOS App Link
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="https://apps.apple.com/"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("iosAppLink")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= PROJECT CONTENT ================= */}
+                        {/* ================= LONG DESCRIPTION ================= */}
                         <div className="col-span-12">
-
                             <div className="input_box pb-4 relative">
-
                                 <p className="mb-1 text-[14px] text-[#151515]">
-                                    Project Content
-                                    <span className="text-red-500">*</span>
+                                    Long Description<span className="text-red-500">*</span>
                                 </p>
-
                                 <Controller
-                                    name="projectContent"
+                                    name="long_description"
                                     control={control}
                                     rules={{
                                         validate: validateEditor,
@@ -780,104 +650,65 @@ const EditProject = () => {
                                             modules={modules}
                                             value={field.value || ""}
                                             onChange={field.onChange}
-                                            placeholder="Enter project content..."
+                                            placeholder="Enter detailed project content..."
                                         />
                                     )}
                                 />
-
-                                {errors.projectContent && (
+                                {errors.long_description && (
                                     <p className="mt-1 text-[12px] text-[#dc3545]">
-                                        {errors.projectContent.message}
+                                        {errors.long_description.message}
                                     </p>
                                 )}
-
                             </div>
-
                         </div>
 
-
                         {/* ================= META TITLE ================= */}
-                        <div className="col-span-12 lg:col-span-6">
-
+                        <div className="col-span-12">
                             <div className="input_box pb-3">
-
                                 <p className="mb-1 text-[14px] text-[#151515]">
                                     Meta Title
                                 </p>
-
                                 <input
                                     type="text"
                                     placeholder="Meta Title"
                                     className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("metaTitle")}
+                                    {...register("meta_title")}
                                 />
-
                             </div>
-
                         </div>
-
-
-                        {/* ================= SLUG ================= */}
-                        <div className="col-span-12 lg:col-span-6">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Slug
-                                </p>
-
-                                <input
-                                    type="text"
-                                    placeholder="Slug"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
-                                    {...register("slug")}
-                                />
-
-                            </div>
-
-                        </div>
-
 
                         {/* ================= META DESCRIPTION ================= */}
                         <div className="col-span-12">
-
                             <div className="input_box pb-3">
-
                                 <p className="mb-1 text-[14px] text-[#151515]">
                                     Meta Description
                                 </p>
-
                                 <textarea
                                     rows={3}
                                     placeholder="Meta Description"
                                     className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] resize-none"
-                                    {...register("metaDescription")}
+                                    {...register("meta_description")}
                                 />
-
                             </div>
-
                         </div>
 
                     </div>
 
-
                     {/* ================= BUTTONS ================= */}
                     <div className="flex items-center gap-3 mt-5 justify-end">
-
                         <button
                             type="button"
-                            onClick={handleReset}
+                            onClick={() => navigate("/admin/projects")}
                             className="py-2.5 px-5 text-[14px] rounded-md border border-[#E6EAEF] text-[#151515] hover:bg-gray-50 transition-all"
                         >
                             Cancel
                         </button>
-
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={saving}
                             className="py-2.5 px-6 text-[14px] bg-[#431f0f] text-white rounded-md hover:bg-[#32170b] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[100px]"
                         >
-                            {loading ? (
+                            {saving ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                                     Updating...
@@ -886,13 +717,10 @@ const EditProject = () => {
                                 "Update"
                             )}
                         </button>
-
                     </div>
 
                 </form>
-
             </div>
-
         </Layout>
     );
 };
