@@ -202,7 +202,7 @@ const Blogs = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search blogs..."
-                className="w-full pl-9 pr-8 py-2 text-[14px] border border-[#E9EEF2] rounded-md focus:outline-none focus:border-[#431f0f] bg-[#F9FAFB] placeholder:text-[#9AA2AC]"
+                className="w-full pl-9 pr-8 py-3 text-[14px] border border-[#E9EEF2] rounded-md focus:outline-none focus:border-[#431f0f] bg-[#F9FAFB] placeholder:text-[#9AA2AC]"
               />
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA2AC] text-[16px]" />
               {searchQuery && (
