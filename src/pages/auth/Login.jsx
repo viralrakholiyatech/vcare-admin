@@ -117,7 +117,6 @@ const Login = () => {
 
                                 {/* HEADING */}
                                 <div className="lg:pb-7 pb-5">
-
                                     <h1 className="lg:text-[26px] text-[24px] font-semibold lg:mb-[3px] mb-[1px]">
                                         Welcome Back
                                     </h1>
