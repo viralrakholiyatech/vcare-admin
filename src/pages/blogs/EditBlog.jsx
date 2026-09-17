@@ -112,7 +112,7 @@ const EditBlog = () => {
                     setImagePreview(
                         blog.image.startsWith("http")
                             ? blog.image
-                            : `https://www.vcaretechnologies.net/uploads/${blog.image}`
+                            : `https://www.vcaretechnologies.net/public/frontend/images/blog/${blog.image}`
                     );
                 }
 
@@ -173,36 +173,47 @@ const EditBlog = () => {
         setSaving(true);
 
         try {
-            /*
-             * Dummy PUT API
-             *
-             * JSONPlaceholder does not actually update
-             * anything permanently.
-             */
+            const token = localStorage.getItem("adminToken");
 
-            const response = await fetch(
-                `https://jsonplaceholder.typicode.com/posts/${slug}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        id: Number(slug),
-                        title: data.title,
-                        body: data.longDescription,
-                        userId: 1,
-                    }),
-                }
-            );
+            const formData = new FormData();
+            formData.append("id", slug);
+            formData.append("title", data.title || "");
+            formData.append("alias", data.alias || "");
+            formData.append("date", data.date || "");
+            formData.append("blog_date", data.date || "");
+            formData.append("user", data.user || "");
+            formData.append("username", data.user || "");
+            formData.append("description", data.description || "");
+            formData.append("longDescription", data.longDescription || "");
+            formData.append("long_description", data.longDescription || "");
+            formData.append("metaTitle", data.metaTitle || "");
+            formData.append("meta_title", data.metaTitle || "");
+            formData.append("metaDescription", data.metaDescription || "");
+            formData.append("meta_description", data.metaDescription || "");
+            formData.append("status", data.status || "active");
 
-            if (!response.ok) {
-                throw new Error("Failed to update blog");
+            if (data.image) {
+                formData.append("image", data.image);
+                formData.append("blog_image", data.image);
             }
+
+            const response = await fetch("/api/addblog", {
+                method: "POST",
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: formData,
+            });
 
             const result = await response.json();
 
             console.log("Update API Response:", result);
+
+            if (!response.ok || result.error || result.status === false) {
+                throw new Error(
+                    result.messages || result.message || "Failed to update blog"
+                );
+            }
 
             setSaving(false);
 
@@ -210,7 +221,7 @@ const EditBlog = () => {
                 toast: true,
                 position: "top-end",
                 icon: "success",
-                title: "Blog updated successfully",
+                title: result.messages || result.message || "Blog updated successfully",
                 showConfirmButton: false,
                 timer: 2000,
                 timerProgressBar: true,
@@ -227,7 +238,7 @@ const EditBlog = () => {
                 position: "top-end",
                 icon: "error",
                 title: "Update failed",
-                text: error.message,
+                text: error.message || "Something went wrong. Please try again.",
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
