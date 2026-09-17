@@ -294,16 +294,12 @@ const AddProject = () => {
                                 <p className="mb-1 text-[14px] text-[#151515]">
                                     Service ID
                                 </p>
-                                <select
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] bg-white cursor-pointer"
+                                <input
+                                    type="text"
+                                    placeholder="Service ID"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
                                     {...register("service_id")}
-                                >
-                                    <option value="">Select Service</option>
-                                    <option value="2">Mobile Apps</option>
-                                    <option value="3">Websites</option>
-                                    <option value="4">Software Development</option>
-                                    <option value="5">Web Development</option>
-                                </select>
+                                />
                             </div>
                         </div>
 

@@ -73,6 +73,7 @@ const EditProject = () => {
 
             try {
                 console.log("Loading Project ID:", slug);
+                const token = localStorage.getItem("adminToken");
                 if (!token) {
                     throw new Error("Authorization token missing. Please log in.");
                 }
@@ -102,8 +103,8 @@ const EditProject = () => {
                 const projectList = Array.isArray(result.data)
                     ? result.data
                     : result.data
-                    ? [result.data]
-                    : [];
+                        ? [result.data]
+                        : [];
 
                 const project =
                     projectList.find(
