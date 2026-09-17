@@ -134,20 +134,30 @@ const AddProject = () => {
                 formData.append("logo", data.logo_image);
             }
 
+            if (!token) {
+                throw new Error("Authorization token missing. Please log in first.");
+            }
+
             const response = await fetch("/api/addproject", {
                 method: "POST",
                 headers: {
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    Authorization: `Bearer ${token}`,
                 },
                 body: formData,
             });
 
-            const result = await response.json();
+            const text = await response.text();
+            let result = {};
+            try {
+                result = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.warn("Could not parse JSON response:", text);
+            }
             console.log("Add Project Response:", result);
 
             if (!response.ok || result.error || result.status === false) {
                 throw new Error(
-                    result.messages || result.message || "Failed to add project"
+                    result.messages || result.message || (text && text.length < 200 ? text : `Server error (${response.status})`)
                 );
             }
 

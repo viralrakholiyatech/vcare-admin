@@ -73,25 +73,29 @@ const EditProject = () => {
 
             try {
                 console.log("Loading Project ID:", slug);
-                const token = localStorage.getItem("adminToken");
+                if (!token) {
+                    throw new Error("Authorization token missing. Please log in.");
+                }
 
                 const response = await fetch("/api/getproject", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({ id: slug }),
                 });
 
-                if (!response.ok) {
-                    throw new Error("Failed to fetch project");
+                const text = await response.text();
+                let result = {};
+                try {
+                    result = text ? JSON.parse(text) : {};
+                } catch (e) {
+                    console.warn("Could not parse JSON response:", text);
                 }
-
-                const result = await response.json();
                 console.log("Project API Response:", result);
 
-                if (result.error || result.status === false) {
+                if (!response.ok || result.error || result.status === false) {
                     throw new Error(result.messages || result.message || "Failed to load project");
                 }
 
@@ -211,20 +215,30 @@ const EditProject = () => {
                 formData.append("logo", data.logo_image);
             }
 
+            if (!token) {
+                throw new Error("Authorization token missing. Please log in first.");
+            }
+
             const response = await fetch("/api/addproject", {
                 method: "POST",
                 headers: {
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    Authorization: `Bearer ${token}`,
                 },
                 body: formData,
             });
 
-            const result = await response.json();
+            const text = await response.text();
+            let result = {};
+            try {
+                result = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.warn("Could not parse JSON response:", text);
+            }
             console.log("Update Project Response:", result);
 
             if (!response.ok || result.error || result.status === false) {
                 throw new Error(
-                    result.messages || result.message || "Failed to update project"
+                    result.messages || result.message || (text && text.length < 200 ? text : `Server error (${response.status})`)
                 );
             }
 

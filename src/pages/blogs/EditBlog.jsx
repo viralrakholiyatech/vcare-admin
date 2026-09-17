@@ -78,15 +78,17 @@ const EditBlog = () => {
                     body: JSON.stringify({ id: slug }),
                 });
 
-                if (!response.ok) {
-                    throw new Error("Failed to load blog");
+                const text = await response.text();
+                let result = {};
+                try {
+                    result = text ? JSON.parse(text) : {};
+                } catch (e) {
+                    console.warn("Could not parse JSON response:", text);
                 }
-
-                const result = await response.json();
 
                 console.log("Blog API Response:", result);
 
-                if (result.error || result.status === false) {
+                if (!response.ok || result.error || result.status === false) {
                     throw new Error(
                         result.messages || result.message || "Failed to load blog"
                     );
@@ -203,9 +205,6 @@ const EditBlog = () => {
             formData.append("metaTitle", data.metaTitle || "");
             formData.append("meta_title", data.metaTitle || "");
             formData.append("metaDescription", data.metaDescription || "");
-            formData.append("meta_description", data.metaDescription || "");
-            formData.append("status", data.status || "active");
-
             if (data.image) {
                 formData.append("image", data.image);
                 formData.append("blog_image", data.image);
@@ -219,13 +218,19 @@ const EditBlog = () => {
                 body: formData,
             });
 
-            const result = await response.json();
+            const text = await response.text();
+            let result = {};
+            try {
+                result = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.warn("Could not parse JSON response:", text);
+            }
 
             console.log("Update API Response:", result);
 
             if (!response.ok || result.error || result.status === false) {
                 throw new Error(
-                    result.messages || result.message || "Failed to update blog"
+                    result.messages || result.message || (text && text.length < 200 ? text : `Server error (${response.status})`)
                 );
             }
 

@@ -26,7 +26,13 @@ const Projects = () => {
         body: JSON.stringify({}),
       });
 
-      const result = await response.json();
+      const text = await response.text();
+      let result = {};
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (e) {
+        console.warn("Could not parse JSON response:", text);
+      }
       console.log('Projects list response:', result);
 
       if (response.ok && !result.error && result.data) {
@@ -85,7 +91,13 @@ const Projects = () => {
         body: JSON.stringify({ id }),
       });
 
-      const resData = await response.json();
+      const text = await response.text();
+      let resData = {};
+      try {
+        resData = text ? JSON.parse(text) : {};
+      } catch (e) {
+        console.warn("Could not parse JSON response:", text);
+      }
 
       if (response.ok && !resData.error && resData.status !== false) {
         setData((prev) => prev.filter((row) => row.id !== id));
