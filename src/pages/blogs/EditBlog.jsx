@@ -124,12 +124,16 @@ const EditBlog = () => {
                     image: null,
                 });
 
-                if (blog.image) {
-                    setImagePreview(
-                        blog.image.startsWith("http")
-                            ? blog.image
-                            : `https://www.vcaretechnologies.net/public/frontend/images/blog/${blog.image}`
-                    );
+                const getFullImgUrl = (img) => {
+                    if (!img || typeof img !== "string") return null;
+                    return img.startsWith("http")
+                        ? img
+                        : `https://www.vcaretechnologies.net/public/frontend/images/blog/${img}`;
+                };
+
+                const rawImg = blog.image || blog.blog_image || blog.img;
+                if (rawImg) {
+                    setImagePreview(getFullImgUrl(rawImg));
                 }
 
                 setLoading(false);
@@ -535,11 +539,10 @@ const EditBlog = () => {
                                 render={({
                                     field: { onChange },
                                 }) => (
-                                    <div className="input_box pb-3">
+                                    <div className="input_box pb-3 relative">
 
                                         <p className="mb-1 text-[14px] text-[#151515]">
-                                            Image
-                                            <span className="text-red-500">*</span>
+                                            Image (image)
                                         </p>
 
                                         <input
@@ -564,7 +567,7 @@ const EditBlog = () => {
                                                 <img
                                                     src={imagePreview}
                                                     alt="Blog Preview"
-                                                    className="w-[180px] h-[110px] object-cover rounded-md border border-[#E6EAEF]"
+                                                    className="w-[140px] h-[85px] object-cover rounded-md border border-[#E6EAEF]"
                                                 />
 
                                                 <button
@@ -574,7 +577,7 @@ const EditBlog = () => {
                                                             onChange
                                                         )
                                                     }
-                                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600"
+                                                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-[16px] flex items-center justify-center hover:bg-red-600 cursor-pointer"
                                                 >
                                                     ×
                                                 </button>
@@ -582,8 +585,8 @@ const EditBlog = () => {
                                             </div>
                                         )}
 
-                                        <p className="text-[11px] text-[#888] mt-2">
-                                            Leave empty to keep the existing image.
+                                        <p className="text-[11px] text-[#888] mt-1">
+                                            Leave empty to keep existing image.
                                         </p>
 
                                     </div>
