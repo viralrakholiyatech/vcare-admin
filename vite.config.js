@@ -5,4 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://www.vcaretechnologies.net',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
