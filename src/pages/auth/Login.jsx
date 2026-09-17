@@ -26,33 +26,31 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch("https://dummyjson.com/auth/login", {
+            const response = await fetch("https://www.vcaretechnologies.net/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: data.username,
+                    email: data.email,
                     password: data.password,
-                    expiresInMins: 30,
                 }),
-                credentials: "include",
             });
 
             const result = await response.json();
 
             console.log("Login Response:", result);
 
-            if (!response.ok) {
+            if (!response.ok || result.error || !result.token) {
                 throw new Error(
-                    result.message || "Invalid username or password"
+                    result.messages || result.message || "Invalid email or password"
                 );
             }
 
-            localStorage.setItem("adminToken", result.accessToken);
+            localStorage.setItem("adminToken", result.token);
 
-            if (result.refreshToken) {
-                localStorage.setItem("refreshToken", result.refreshToken);
+            if (result.user) {
+                localStorage.setItem("user", JSON.stringify(result.user));
             }
 
             setLoading(false);
@@ -62,16 +60,16 @@ const Login = () => {
                 toast: true,
                 position: "top-end",
                 icon: "success",
-                title: "Login successful",
+                title: result.messages || "Login successful",
                 showConfirmButton: false,
-                timer: 2500,
+                timer: 2000,
                 timerProgressBar: true,
             });
 
-            // Redirect after 2.5 seconds
+            // Redirect after 2 seconds
             setTimeout(() => {
                 navigate("/admin/dashboard");
-            }, 2500);
+            }, 2000);
 
         } catch (error) {
             console.error("Login Error:", error);
@@ -83,7 +81,7 @@ const Login = () => {
                 position: "top-end",
                 icon: "error",
                 title: "Login failed",
-                text: error.message,
+                text: error.message || "Something went wrong. Please try again.",
                 showConfirmButton: false,
                 timer: 2500,
                 timerProgressBar: true,
@@ -129,31 +127,32 @@ const Login = () => {
                                     </p>
 
                                 </div>
-
-                                <p>username  : emilys</p>
-                                <p>password  : emilyspass</p>
                                 {/* FORM */}
                                 <form onSubmit={handleSubmit(onSubmit)}>
 
-                                    {/* USERNAME */}
+                                    {/* EMAIL */}
                                     <div className="lg:mb-10 mb-7 relative">
 
                                         <p className="text-[#3A3A3A] lg:text-[14px] text-[12px] font-medium mb-1">
-                                            Username
+                                            Email
                                         </p>
 
                                         <input
-                                            type="text"
+                                            type="email"
                                             className="lg:text-[14px] text-[12px] focus:outline-none text-[#909090] w-full lg:py-2 lg:px-4 py-2 px-3 rounded-md bg-[#F7F7F8] placeholder:text-[#667085]"
-                                            placeholder="Enter your username"
-                                            {...register("username", {
-                                                required: "Username is required",
+                                            placeholder="Enter your email"
+                                            {...register("email", {
+                                                required: "Email is required",
+                                                pattern: {
+                                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                                    message: "Invalid email address",
+                                                },
                                             })}
                                         />
 
-                                        {errors.username && (
+                                        {errors.email && (
                                             <p className="absolute lg:bottom-[-20px] bottom-[-15px] left-0 lg:text-[12px] text-[10px] text-[#dc3545]">
-                                                {errors.username.message}
+                                                {errors.email.message}
                                             </p>
                                         )}
 
