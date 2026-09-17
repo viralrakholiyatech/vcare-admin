@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { FiSearch } from 'react-icons/fi';
 import Layout from '../../components/Layout';
 import EditIcon from '../../../public/images/edit-icon.svg';
 import DeleteIcon from '../../../public/images/delete-icon.svg';
@@ -9,6 +10,7 @@ import DeleteIcon from '../../../public/images/delete-icon.svg';
 const Blogs = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load Blogs
   const fetchBlogs = async () => {
@@ -172,29 +174,62 @@ const Blogs = () => {
     },
   ];
 
+  const filteredData = data.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      item.name?.toLowerCase().includes(query) ||
+      item.date?.toLowerCase().includes(query) ||
+      String(item.id).includes(query)
+    );
+  });
+
   return (
     <Layout>
       <div className="main-page-card border border-[#E9EEF2] bg-white rounded-lg lg:p-4 p-3">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="lg:text-[24px] text-[22px] font-semibold text-[#151515]">
             Blogs
           </h2>
 
-          <Link
-            to="/admin/blog/add"
-            className="user-detail-link item relative lg:p-[12px] p-[10px] rounded-md text-white font-medium lg:text-[16px] text-[14px] bg-[#431f0f] flex items-center gap-4 w-auto transition-all duration-500 hover:bg-[#32170b]"
-          >
-            Add Blog
-          </Link>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-[260px]">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search blogs..."
+                className="w-full pl-9 pr-8 py-2 text-[14px] border border-[#E9EEF2] rounded-md focus:outline-none focus:border-[#431f0f] bg-[#F9FAFB] placeholder:text-[#9AA2AC]"
+              />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA2AC] text-[16px]" />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-[14px] cursor-pointer"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            <Link
+              to="/admin/blog/add"
+              className="user-detail-link item relative lg:p-[12px] p-[10px] rounded-md text-white font-medium lg:text-[16px] text-[14px] bg-[#431f0f] flex items-center gap-4 w-auto shrink-0 transition-all duration-500 hover:bg-[#32170b]"
+            >
+              Add Blog
+            </Link>
+          </div>
         </div>
 
         {/* Table */}
         <div className="table-responsive">
           <DataTable
             columns={columns}
-            data={data}
+            data={filteredData}
             progressPending={loading}
             pagination
             paginationPerPage={100}
@@ -204,7 +239,7 @@ const Blogs = () => {
             pointerOnHover
             noDataComponent={
               <div className="py-6 text-gray-500">
-                No blogs found
+                {searchQuery ? 'No matching blogs found' : 'No blogs found'}
               </div>
             }
           />
