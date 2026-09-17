@@ -24,7 +24,7 @@ const AddProject = () => {
         formState: { errors },
     } = useForm({
         defaultValues: {
-            status: "active",
+            projectName: "",
         },
     });
 
@@ -47,7 +47,6 @@ const AddProject = () => {
             metaTitle: "",
             metaDescription: "",
             slug: "",
-            status: "active",
         });
 
         setThumbnailPreview(null);
@@ -628,7 +627,7 @@ const AddProject = () => {
 
 
                         {/* ================= META TITLE ================= */}
-                        <div className="col-span-12 lg:col-span-4">
+                        <div className="col-span-12 lg:col-span-6">
 
                             <div className="input_box pb-3">
 
@@ -648,29 +647,8 @@ const AddProject = () => {
                         </div>
 
 
-                        {/* ================= META DESCRIPTION ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Meta Description
-                                </p>
-
-                                <textarea
-                                    rows={3}
-                                    placeholder="Meta Description"
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] resize-none"
-                                    {...register("metaDescription")}
-                                />
-
-                            </div>
-
-                        </div>
-
-
                         {/* ================= SLUG ================= */}
-                        <div className="col-span-12 lg:col-span-4">
+                        <div className="col-span-12 lg:col-span-6">
 
                             <div className="input_box pb-3">
 
@@ -690,35 +668,21 @@ const AddProject = () => {
                         </div>
 
 
-                        {/* ================= STATUS ================= */}
-                        <div className="col-span-12 lg:col-span-4">
+                        {/* ================= META DESCRIPTION ================= */}
+                        <div className="col-span-12">
 
-                            <div className="input_box pb-3 relative">
+                            <div className="input_box pb-3">
 
                                 <p className="mb-1 text-[14px] text-[#151515]">
-                                    Status
+                                    Meta Description
                                 </p>
 
-                                <select
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] bg-white"
-                                    {...register("status", {
-                                        required: "Select status",
-                                    })}
-                                >
-                                    <option value="active">
-                                        Active
-                                    </option>
-
-                                    <option value="inactive">
-                                        Inactive
-                                    </option>
-                                </select>
-
-                                {errors.status && (
-                                    <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
-                                        {errors.status.message}
-                                    </p>
-                                )}
+                                <textarea
+                                    rows={3}
+                                    placeholder="Meta Description"
+                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] resize-none"
+                                    {...register("metaDescription")}
+                                />
 
                             </div>
 

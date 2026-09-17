@@ -22,17 +22,6 @@ const Projects = () => {
     },
   ]);
 
-  // Update Status
-  const updateStatus = (id, newStatus) => {
-    setData(prev =>
-      prev.map(row =>
-        row.id === id
-          ? { ...row, status: newStatus }
-          : row
-      )
-    );
-  };
-
   // Delete Blog
   const handleDelete = async id => {
     const result = await Swal.fire({
@@ -105,31 +94,6 @@ const Projects = () => {
         </div>
       ),
       width: '120px',
-    },
-    {
-      name: 'Status',
-      cell: row => (
-        <button
-          type="button" 
-          className={`px-3 py-1.5 rounded-full text-[12px] font-semibold capitalize transition-all duration-200 ${
-            row.status === 'active'
-              ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
-              : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
-          }`}
-        >
-          <span
-            className={`inline-block w-2 h-2 rounded-full mr-1.5 ${
-              row.status === 'active'
-                ? 'bg-green-600'
-                : 'bg-red-600'
-            }`}
-          ></span>
-          {row.status}
-        </button>
-      ),
-      sortable: true,
-      sortFunction: (rowA, rowB) =>
-        rowA.status.localeCompare(rowB.status),
     },
     {
       name: 'Actions',

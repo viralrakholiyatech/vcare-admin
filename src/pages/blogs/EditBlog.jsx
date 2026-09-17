@@ -32,7 +32,6 @@ const EditBlog = () => {
             longDescription: "",
             metaTitle: "",
             metaDescription: "",
-            status: "active",
             image: null,
         },
     });
@@ -120,7 +119,6 @@ const EditBlog = () => {
                     longDescription: blog.long_description || blog.longDescription || "",
                     metaTitle: blog.meta_title || blog.metaTitle || "",
                     metaDescription: blog.meta_description || blog.metaDescription || "",
-                    status: blog.status || "active",
                     image: null,
                 });
 
@@ -385,7 +383,7 @@ const EditBlog = () => {
 
                         {/* ================= DATE ================= */}
 
-                        <div className="col-span-12 lg:col-span-4">
+                        <div className="col-span-12 lg:col-span-6">
 
                             <div className="input_box pb-3 relative">
 
@@ -415,7 +413,7 @@ const EditBlog = () => {
 
                         {/* ================= USER ================= */}
 
-                        <div className="col-span-12 lg:col-span-4">
+                        <div className="col-span-12 lg:col-span-6">
 
                             <div className="input_box pb-3 relative">
 
@@ -438,34 +436,6 @@ const EditBlog = () => {
                                         {errors.user.message}
                                     </p>
                                 )}
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= STATUS ================= */}
-
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3 relative">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Status
-                                </p>
-
-                                <select
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] bg-white"
-                                    {...register("status")}
-                                >
-                                    <option value="active">
-                                        Active
-                                    </option>
-
-                                    <option value="inactive">
-                                        Inactive
-                                    </option>
-                                </select>
 
                             </div>
 

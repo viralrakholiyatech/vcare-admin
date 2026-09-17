@@ -23,7 +23,6 @@ const AddBlog = () => {
         formState: { errors },
     } = useForm({
         defaultValues: {
-            status: "active",
             date: new Date().toISOString().split("T")[0],
         },
     });
@@ -37,7 +36,6 @@ const AddBlog = () => {
             longDescription: "",
             metaTitle: "",
             metaDescription: "",
-            status: "active",
             image: null,
         });
 
@@ -374,7 +372,7 @@ const AddBlog = () => {
 
 
                         {/* ================= META TITLE ================= */}
-                        <div className="col-span-12 lg:col-span-8">
+                        <div className="col-span-12">
 
                             <div className="input_box pb-3">
 
@@ -388,41 +386,6 @@ const AddBlog = () => {
                                     className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f]"
                                     {...register("metaTitle")}
                                 />
-
-                            </div>
-
-                        </div>
-
-
-                        {/* ================= STATUS ================= */}
-                        <div className="col-span-12 lg:col-span-4">
-
-                            <div className="input_box pb-3 relative">
-
-                                <p className="mb-1 text-[14px] text-[#151515]">
-                                    Status
-                                </p>
-
-                                <select
-                                    className="w-full py-2.5 px-3 text-[14px] border border-[#E6EAEF] rounded-md outline-none focus:border-[#431f0f] bg-white"
-                                    {...register("status", {
-                                        required: "Select status",
-                                    })}
-                                >
-                                    <option value="active">
-                                        Active
-                                    </option>
-
-                                    <option value="inactive">
-                                        Inactive
-                                    </option>
-                                </select>
-
-                                {errors.status && (
-                                    <p className="absolute bottom-[-7px] text-[12px] text-[#dc3545]">
-                                        {errors.status.message}
-                                    </p>
-                                )}
 
                             </div>
 
